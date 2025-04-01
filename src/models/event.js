@@ -13,6 +13,14 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      currency: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      amount: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+      },
       date: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -22,6 +30,10 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       location: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      artistName: {
         type: DataTypes.STRING,
         allowNull: false,
       },

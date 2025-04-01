@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
 // Routes
 app.use("/api/artists", artistRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api/bookings", authMiddleware, bookingRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 app.use((err, req, res, next) => {
   logger.error(err.stack);

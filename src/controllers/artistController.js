@@ -52,7 +52,7 @@ exports.login = async (req, res) => {
       }
     );
 
-    res.json({ message: "Login successful", data: token });
+    res.json({ message: "Login successful", token });
   } catch (error) {
     logger.error("Login error:", error.message);
     res.status(500).json({ message: error.message });

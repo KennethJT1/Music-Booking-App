@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon ./src/app.js",
     "start": "node ./src/app.js",
-    "migrate": "npx sequelize-cli db:migrate --config src/config/config.js"
+    "migrate": "npx sequelize-cli db:migrate"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

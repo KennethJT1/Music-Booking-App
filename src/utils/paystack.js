@@ -1,6 +1,6 @@
 const paystack = require("paystack-api")(process.env.PAYSTACK_SECRET_KEY);
 
-const initializePayment = async (amount, email) => {
+const initializePayment = async (amount, email,currency) => {
   try {
     const response = await paystack.transaction.initialize({
       amount: amount * 100,

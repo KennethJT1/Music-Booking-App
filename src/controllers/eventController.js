@@ -1,5 +1,6 @@
-const Event = require("../models/event");
+const Event = require("../models").Event;
 const { eventSchema, updateEventSchema } = require("../utils/validation");
+const Artist = require("../models").Artist;
 
 exports.createEvent = async (req, res) => {
   try {
@@ -12,8 +13,13 @@ exports.createEvent = async (req, res) => {
       return res.status(400).json({ message: error.details[0].message });
     }
 
+    const artistName = await Artist.findByPk(req.user).then(
+      (artist) => artist.name
+    );
+
     const eventData = {
       ...req.body,
+      artistName,
       artistId: req.user,
     };
 

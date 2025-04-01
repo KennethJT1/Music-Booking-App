@@ -76,14 +76,9 @@ exports.eventSchema = Joi.object({
     "string.max": "Location must not exceed 255 characters.",
     "any.required": "Location is required.",
   }),
-  artistId: Joi.string().pattern(uuidPattern).required().messages({
-    "string.base": "Artist ID must be a string.",
-    "string.pattern.base": "Artist ID must be a valid UUID.",
-    "any.required": "Artist ID is required.",
-  }),
 });
 
 exports.updateEventSchema = exports.eventSchema.fork(
-  ["title", "date", "description", "location", "artistId"],
+  ["title", "date", "description", "location"],
   (field) => field.optional()
 );

@@ -1,25 +1,38 @@
-const Booking = require("../models/booking");
-const Event = require("../models/event");
-
+const Booking = require("../models").Booking;
+const Event = require("../models").Event;
 const { initializePayment, verifyPayment } = require("../utils/paystack");
 
 exports.bookEvent = async (req, res) => {
-  const { eventId, name, email, paymentAmount } = req.body;
-
+  const { eventId, name, email } = req.body;
   try {
-    const payment = await initializePayment(paymentAmount, email);
+    const event = await Event.findByPk(eventId);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    const currentDate = new Date();
+    if (new Date(event.date) < currentDate) {
+      return res.status(400).json({
+        message: "You cannot book an event that has closed",
+      });
+    }
+
+    const paymentAmount = event.amount;
+    const currency = event.currency;
+
+    const payment = await initializePayment(paymentAmount, email, currency);
 
     const booking = await Booking.create({
       eventId,
       name,
+      currency,
       paymentStatus: "unpaid",
       paymentAmount,
+      transactionId: payment.data.reference,
     });
 
     res.status(200).json({
       message: "Booking initiated",
       booking,
-      paymentUrl: payment.data.authorization_url,
+      data: payment.data.authorization_url,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -27,41 +40,56 @@ exports.bookEvent = async (req, res) => {
 };
 
 exports.handlePaymentCallback = async (req, res) => {
-  const { reference } = req.query;
-
   try {
-    const payment = await verifyPayment(reference);
+    const hash = req.headers["x-paystack-signature"];
+    const payload = JSON.stringify(req.body);
 
-    if (payment.data.status === "success") {
-      await Booking.update(
-        { paymentStatus: "paid", transactionId: reference },
-        { where: { id: req.params.bookingId } }
-      );
-      res.status(200).json({ message: "Payment successful" });
-    } else {
-      res.status(400).json({ message: "Payment failed" });
+    // Verify the webhook signature
+    const computedHash = crypto
+      .createHmac("sha512", PAYSTACK_SECRET_KEY)
+      .update(payload)
+      .digest("hex");
+
+    if (hash !== computedHash) {
+      return res.status(400).json({ message: "Invalid signature" });
     }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
-exports.createBooking = async (req, res) => {
-  try {
-    const event = await Event.findByPk(req.body.eventId);
-    if (!event) return res.status(404).json({ message: "Event not found" });
+    // Process the event
+    const event = req.body;
 
-    const booking = await Booking.create({ ...req.body, userId: req.userId });
-    res.status(201).json(booking);
+    if (event.event === "charge.success") {
+      const { reference, amount, currency, customer } = event.data;
+
+      // Find the booking associated with the payment reference
+      const booking = await Booking.findOne({
+        where: { transactionId: reference },
+      });
+
+      if (booking) {
+        // Update the booking status to "paid"
+        await Booking.update(
+          { paymentStatus: "paid", paymentAmount: amount / 100 }, // Convert amount from kobo to naira
+          { where: { id: booking.id } }
+        );
+
+        console.log(
+          `Payment successful: Reference=${reference}, Amount=${amount}, Customer=${customer.email}`
+        );
+      }
+    }
+
+    // Respond to Paystack to acknowledge receipt of the webhook
+    res.status(200).json({ message: "Webhook received" });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Error processing webhook:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.findAll();
-    res.status(200).json(bookings);
+    res.status(200).json({ counts: bookings.length, data: bookings });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -71,18 +99,7 @@ exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findByPk(req.params.id);
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    res.status(200).json(booking);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-exports.updateBooking = async (req, res) => {
-  try {
-    const booking = await Booking.findByPk(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
-    await booking.update(req.body);
-    res.status(200).json(booking);
+    res.status(200).json({ data: booking });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
