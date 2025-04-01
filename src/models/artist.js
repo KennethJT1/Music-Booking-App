@@ -47,6 +47,13 @@ module.exports = (sequelize) => {
   };
 
   Artist.addHook("beforeCreate", async (artist) => {
+    const existingArtist = await Artist.findOne({
+      where: { email: artist.email },
+    });
+    if (existingArtist) {
+      throw new Error("Email already registered.");
+    }
+
     if (artist.changed("password")) {
       artist.password = await bcrypt.hash(artist.password, 10);
     }
