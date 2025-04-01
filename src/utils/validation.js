@@ -76,10 +76,20 @@ exports.eventSchema = Joi.object({
     "string.max": "Location must not exceed 255 characters.",
     "any.required": "Location is required.",
   }),
+  currency: Joi.string().length(3).required().messages({
+    "string.base": "Currency must be a string.",
+    "string.length": "Currency must be exactly 3 characters long.",
+    "any.required": "Currency is required.",
+  }),
+  amount: Joi.number().greater(0).required().messages({
+    "number.base": "Amount must be a number.",
+    "number.greater": "Amount must be greater than 0.",
+    "any.required": "Amount is required.",
+  }),
 });
 
 exports.updateEventSchema = exports.eventSchema.fork(
-  ["title", "date", "description", "location"],
+  ["title", "date", "description", "location","currency","amount"],
   (field) => field.optional()
 );
 
