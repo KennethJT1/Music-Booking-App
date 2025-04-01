@@ -82,3 +82,37 @@ exports.updateEventSchema = exports.eventSchema.fork(
   ["title", "date", "description", "location"],
   (field) => field.optional()
 );
+
+exports.bookingSchema = Joi.object({
+  eventId: Joi.string()
+    .pattern(uuidPattern)
+    .required()
+    .messages({
+      "string.base": "Event ID must be a string",
+      "string.empty": "Event ID cannot be empty",
+      "string.pattern.base": "Event ID must be a valid UUID",
+      "any.required": "Event ID is required",
+    }),
+
+  name: Joi.string()
+    .min(2)
+    .max(50)
+    .required()
+    .messages({
+      "string.base": "Name must be a string",
+      "string.empty": "Name cannot be empty",
+      "string.min": "Name should have at least 2 characters",
+      "string.max": "Name should not exceed 50 characters",
+      "any.required": "Name is required",
+    }),
+
+  email: Joi.string()
+    .email()
+    .required()
+    .messages({
+      "string.base": "Email must be a string",
+      "string.empty": "Email cannot be empty",
+      "string.email": "Email must be a valid email address",
+      "any.required": "Email is required",
+    }),
+});

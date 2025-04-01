@@ -7,7 +7,6 @@ const morgan = require("morgan");
 const artistRoutes = require("./routes/artistRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
-const authMiddleware = require("./middlewares/authMiddleware");
 const sequelize = require("./config");
 require("dotenv").config();
 
@@ -16,7 +15,6 @@ const morganFormat = ":method :url :status :response-time ms";
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-// Middleware
 app.use(
   morgan(morganFormat, {
     stream: {
@@ -40,7 +38,6 @@ app.get("/", (req, res) => {
   res.send("Welcome to MUSIC BOOKING APP");
 });
 
-// Routes
 app.use("/api/artists", artistRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/bookings", bookingRoutes);
